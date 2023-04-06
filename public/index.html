@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student List</title>
+</head>
+
+<body>
+    <h1>Grocery List</h1>
+    <form>
+        <input type='text' placeholder='type a grocery item here...' />
+        <button>add to grocery list</button>
+    </form>
+    <section></section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script>
+        const addForm = document.querySelector('form');
+        const groceryInput = document.querySelector('input');
+        const container = document.querySelector('section');
+
+        function putTheThingInTheView(res) {
+            container.innerHTML = ''
+            groceryInput.value = ''
+
+            res.data.forEach((groceryName, index) => {
+                container.innerHTML += `<p name=${index}>${groceryName}</p>`
+            })
+
+            document.querySelectorAll('p').forEach(element => {
+                const theIndexValue = element.getAttribute('name');
+
+                element.addEventListener('click', () => {
+                    axios
+                        .delete(`http://localhost:5050/api/grocery/${theIndexValue}`)
+                        .then(res => {
+                            putTheThingInTheView(res)
+                        })
+                })
+            })
+        }
+
+        function submitHandler(evt) {
+            evt.preventDefault();
+
+            axios
+                .post('http://localhost:5050/api/grocery', { name: groceryInput.value })
+                .then(res => {
+                    putTheThingInTheView(res)
+                })
+                .catch(err => {
+                    groceryInput.value = ''
+
+                    const notif = document.createElement('aside')
+                    notif.innerHTML = `<p>${err.response.data}</p>
+                    <button class="close">close</button>`
+                    document.body.appendChild(notif)
+
+                    document.querySelectorAll('.close').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.target.parentNode.remove()
+                        })
+                    })
+                })
+        }
+
+        // get grocery list on initial load
+        axios
+            .get('http://localhost:5050/api/grocery')
+            .then(res => {
+                putTheThingInTheView(res)
+            })
+
+        addForm.addEventListener('submit', submitHandler)
+    </script>
+</body>
+
+</html>
